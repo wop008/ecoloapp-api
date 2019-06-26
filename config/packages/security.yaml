@@ -1,0 +1,37 @@
+security:
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    encoders:
+        App\Entity\User:
+          algorithm: bcrypt
+          cost: 12
+
+    providers:
+        database_users:
+            entity:
+              class: App\Entity\User
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        login:
+            pattern:  ^/login
+            stateless: true
+            anonymous: true
+            json_login:
+                check_path: /login
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        main:
+            pattern: ^/
+            stateless: true
+            anonymous: true
+            guard:
+                authenticators:
+                    - lexik_jwt_authentication.jwt_token_authenticator
+    access_control:
+        - { path: '^/api', roles: ROLE_ADMIN }
+        - { path: '^/scan', roles: [ROLE_USER, ROLE_ADMIN] }
+        - { path: ^/profile, roles: ROLE_USER }

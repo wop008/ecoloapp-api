@@ -1,0 +1,11 @@
+login_api:
+    path: /login
+
+scan_produit:
+    path: /api/produit/scan/{uid}/{codebarre}
+    controller: App\Controller\ProduitController::scan
+
+main_test:
+    path: /test
+    controller: App\Controller\MainController::getUser
+    methods: GET
