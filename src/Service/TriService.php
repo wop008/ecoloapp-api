@@ -9,87 +9,92 @@
 namespace App\Service;
 
 use App\Entity\Produit;
+use App\Entity\Emballage;
 
 class TriService
 {
-    const EMBALLAGE_POUBELLE_JAUNE = ['plastique', 'carton', 'papier', 'métal', 'acier', 'aluminium', 'bouchon', 'kunststoff', 'plastic', 'conserve', 'brique',
-        'couvercle', 'film', 'opercule', 'flacon', 'bouchon', 'canette', 'flasche', 'plastico', 'karton', 'sachet', 'tetra', 'pet', 'gourde', 'box',
-        'triman', 'feuille', 'beutel', 'à recycler', 'plastik', 'cardboard'];
-    const EMBALLAGE_POUBELLE_VERTE = ['verre', 'pot', 'glas', 'glass'];
-    ///////// A voir par la suite /////////
-    const EMBALLAGE_DECHETTERIE = ['bois'];
-    ///////////////////////////////////////
-    const EMBALLAGE_POUBELLE_NOIRE = ['à jeter', 'capsule', 'tube', 'squeezer', 'pp', 'bidon', 'bac', 'filet', 'blister', 'becher', 'sac', 'tüte', 'bolsa'];
-    // Voir le cas où certains emballages sont utiles si tout seuls, e.g. bouteille, barquette
-    const EMBALLAGE_NON_UTILE = ['frais', 'bottle', 'bouteille', 'barquette', 'boîte', 'surgele', 'surgeles', 'sous atmosphère protectrice', 'etui', 'sous vide',
-        'stuck', 'produkt', 'point vert', 'pensez au tri', 'paquet', 'product', 'green dot', 'pap', 'dose', 'doypack', 'tablette', 'producto', 'decongele',
-        'produit', 'refrigere', 'pack', 'packung', 'refrigerado'];
+    // Tous les conditionnements faits pour ceux ayant + de 50 produits listés + qquns grâce au strpos()
 
-    // Faire différents cas par rapport à certains emballages ? -> e.g. boîte, différencier carton, métal, autre
+    // Groupement d'emballages poubelle jaune
+    const EMBALLAGE_PLASTIQUE = ['plasti', 'kunststoff', 'pet', 'pp', 'pap', '01', '02', '05', '07', '21', '♳', '♷',
+        'film', 'bouchon', 'sachet', 'beutel'];
+    const EMBALLAGE_CARTON = ['cart', 'brique', 'karton', 'brick', 'cardboard'];
+    const EMBALLAGE_PAPIER = ['papier', 'feuille'];
+    const EMBALLAGE_METAL = ['métal', 'acier', 'alu', 'conserv', 'konserve', 'can', 'lata'];
+
+    // Groupement d'emballages poubelle verte
+    const EMBALLAGE_VERRE = ['verre', 'bocal', 'pot', 'glas', 'vidrio'];
+
+    // Groupement d'emballages allant à la déchetterie
+    const EMBALLAGE_BOIS = ['bois'];
+
+    // Le reste en vrac
+    const EMBALLAGE_POUBELLE_JAUNE = ['couvercle', 'opercule', 'flacon', 'tetra', 'gourde', 'triman', 'à recycler',
+        'recyclable', 'bib'];
+    const EMBALLAGE_POUBELLE_NOIRE = ['à jeter', 'capsule', 'tube', 'squeezer', 'bidon', 'bac', 'filet', 'blister',
+        'becher', 'sac', 'tüte', 'bolsa', 'bag', 'dosette'];
+
     public function trashCanChoice(Produit $produit)
     {
         $poubelleJaune = [];
         $poubelleVerte = [];
         $poubelleNoire = [];
+        $dechetterie = [];
 
-        foreach ($produit->getEmballages() as $emballage)
-        {
-            $foundInPN = false;
-            $foundInPJ = false;
-            if(!in_array($emballage, self::EMBALLAGE_NON_UTILE))
-            {
-                //Va falloir refacto là
-                foreach (self::EMBALLAGE_POUBELLE_NOIRE as $noire)
-                {
-                    if(strpos($emballage, $noire))
-                    {
-                        array_push($poubelleNoire, $emballage);
-                        $foundInPN = true;
-                        break;
-                    }
-                }
-                if(!$foundInPN) {
-                    foreach (self::EMBALLAGE_POUBELLE_JAUNE as $jaune) {
-                        if (strpos($emballage, $jaune) !== false) {
-                            array_push($poubelleJaune, $emballage);
-                            $foundInPJ = true;
-                            break;
-                        }
-                    }
-                    if (!$foundInPJ) {
-                        foreach (self::EMBALLAGE_POUBELLE_VERTE as $verte) {
-                            if (strpos($emballage, $verte) !== false) {
-                                array_push($poubelleJaune, $emballage);
-                                break;
-                            }
+        $countEmballagesProduit = $produit->getEmballages()->count();
+        $countEmballagesInconnus = 0;
+        foreach ($produit->getEmballages() as $emballage) {
+            if (!$this->foundInCan(self::EMBALLAGE_POUBELLE_NOIRE, $emballage, $poubelleNoire)) {
+                if (!$this->foundInCan(self::EMBALLAGE_POUBELLE_JAUNE, $emballage, $poubelleJaune) &&
+                !$this->groupEmballages(self::EMBALLAGE_PLASTIQUE, $emballage, $poubelleJaune, 'plastique') &&
+                !$this->groupEmballages(self::EMBALLAGE_CARTON, $emballage, $poubelleJaune, 'carton') &&
+                !$this->groupEmballages(self::EMBALLAGE_PAPIER, $emballage, $poubelleJaune, 'papier') &&
+                !$this->groupEmballages(self::EMBALLAGE_METAL, $emballage, $poubelleJaune, 'métal')) {
+                    if (!$this->groupEmballages(self::EMBALLAGE_VERRE, $emballage, $poubelleVerte, 'verre')) {
+                        if (!$this->groupEmballages(self::EMBALLAGE_BOIS, $emballage, $dechetterie, 'bois')) {
+                            $countEmballagesInconnus++;
                         }
                     }
                 }
             }
         }
-
-        echo 'Poubelle Jaune<br /><br />';
-        foreach ($poubelleJaune as $recyc)
-        {
-            echo $recyc.'<br />';
+        if ($countEmballagesProduit === $countEmballagesInconnus) {
+            return array();
         }
-        echo '<br />Poubelle Verte<br /><br />';
-        foreach ($poubelleVerte as $verre)
-        {
-            echo $verre.'<br />';
-        }
-        echo '<br />Poubelle Noire<br /><br />';
-        foreach ($poubelleNoire as $dechet)
-        {
-            echo $dechet.'<br />';
-        }
-        die();
 
         $arrayEmballage = array('poubelle_jaune'    =>  $poubelleJaune,
                                 'poubelle_verte'    =>  $poubelleVerte,
+                                'dechetterie'       =>  $dechetterie,
                                 'poubelle_noire'    =>  $poubelleNoire
                                 );
 
         return $arrayEmballage;
+    }
+
+    public function foundInCan($emballagesPoubelle, Emballage $emballage, &$tableauFinal)
+    {
+        foreach ($emballagesPoubelle as $ep) {
+            if (strpos($emballage, $ep) !== false) {
+                array_push($tableauFinal, $emballage->getNom());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /* Regroupe les éléments en fonction de leur nature
+       Par exemple, les éléments "pp, pap, 05, 07, 21"
+       seront tous regroupés sous le terme "plastique" */
+    public function groupEmballages($emballagesPoubelle, Emballage $emballage, &$tableauFinal, $nature)
+    {
+        foreach ($emballagesPoubelle as $ep) {
+            if (strpos($emballage, $ep) !== false && !in_array($nature, $tableauFinal)) {
+                array_push($tableauFinal, $nature);
+                return true;
+            }
+        }
+
+        return false;
     }
 }

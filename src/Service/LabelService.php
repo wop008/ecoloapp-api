@@ -16,7 +16,7 @@ class LabelService
 {
     private $em;
 
-    public function __construct(ObjectManager $em) // Voir pour refactor
+    public function __construct(ObjectManager $em)
     {
         $this->em = $em;
     }
@@ -31,7 +31,7 @@ class LabelService
 
     public function createLabelProduit($labels, Produit $produit)
     {
-        foreach($labels as $labelNom) {
+        foreach ($labels as $labelNom) {
             if (!empty($labelNom)) {
                 $label = $this->existLabelDatabase($labelNom);
                 $produit->addLabel($label);
@@ -44,8 +44,9 @@ class LabelService
     public function existLabelDatabase($nom)
     {
         $labelDb = $this->em->getRepository(Label::class)->findOneBy(array('nom' => $nom));
-        if(!empty($labelDb))
+        if (!empty($labelDb)) {
             return $labelDb;
+        }
 
         return $this->createLabel($nom);
     }

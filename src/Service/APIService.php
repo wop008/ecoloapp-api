@@ -4,7 +4,6 @@ namespace App\Service;
 
 use Unirest;
 
-
 class APIService
 {
     const API_URL = 'https://fr.openfoodfacts.org/api/v0/produit/';
@@ -49,15 +48,17 @@ class APIService
     public function checkMissingFields($obj)
     {
         foreach (self::FIELDS_TO_CHECK as $field) {
-            if (!property_exists($obj, $field))
+            if (!property_exists($obj, $field)) {
                 $obj->{$field} = '';
+            }
         }
     }
 
     public function produitExists($response)
     {
-        if(property_exists($response->body, 'product') && $response->body->product->code !== "")
+        if (property_exists($response->body, 'product') && $response->body->product->code !== "") {
             return true;
+        }
 
         return false;
     }
@@ -65,17 +66,14 @@ class APIService
     public function deleteDuplicates($values)
     {
         // Formatage des valeurs
-        for($i = 0; $i < sizeof($values); $i++)
-        {
+        for ($i = 0; $i < sizeof($values); $i++) {
             $values[$i] = UtilsService::formatNom($values[$i]);
         }
 
         // Nombre d'occurrences de chaque valeur et suppression des doublons
         $occurenceNumbers = array_count_values($values);
-        foreach ($occurenceNumbers as $occurrenceNumber)
-        {
-            while($occurrenceNumber > 1)
-            {
+        foreach ($occurenceNumbers as $occurrenceNumber) {
+            while ($occurrenceNumber > 1) {
                 $valueToDelete = array_search($occurrenceNumber, $occurenceNumbers);
                 $indexToDelete = array_search($valueToDelete, $values);
                 unset($values[$indexToDelete]);

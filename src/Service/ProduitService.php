@@ -20,7 +20,7 @@ class ProduitService
 
     public function __construct(ObjectManager $em)
     {
-        $this->em = $em; // Voir pour refactor
+        $this->em = $em;
         $this->apiService = new APIService();
         $this->emballageService = new EmballageService($em);
         $this->labelService = new LabelService($em);
@@ -30,22 +30,22 @@ class ProduitService
     public function scanProduct(string $codebarre)
     {
         $response = $this->apiService->getProduit($codebarre);  // réponse api
-        if(!$this->apiService->produitExists($response))
-        {
+        if (!$this->apiService->produitExists($response)) {
             http_response_code(404);
             return 'Le produit n\'a pas été trouvé';
         }
         $responseFormated = $this->apiService->formatProduitResponse($response); // réponse formaté
 
         $produit = $this->existProduitDatabase($codebarre);
-        if(empty($produit))
-        {
-            $produit = $this->createProduit($codebarre, $responseFormated['nom'], $responseFormated['origine'], $responseFormated['imgUrl'],$responseFormated['qte']);  // Création produit
+        if (empty($produit)) {
+            $produit = $this->createProduit($codebarre, $responseFormated['nom'], $responseFormated['origine'], $responseFormated['imgUrl'], $responseFormated['qte']);  // Création produit
 
-            // A vérifier si ça fonctionne correctement l'hydratation de l'objet produit
-            $this->labelService->createLabelProduit($responseFormated['labels'], $produit); // Ajout labels produit
-            $this->marqueService->createMarqueProduit($responseFormated['marques'], $produit);  // Ajout marques produit
-            $this->emballageService->createEmballageProduit($responseFormated['emballages'], $produit); // Ajout emballages produit
+            // Ajout labels produit
+            $this->labelService->createLabelProduit($responseFormated['labels'], $produit);
+            // Ajout marques produit
+            $this->marqueService->createMarqueProduit($responseFormated['marques'], $produit);
+            // Ajout emballages produit
+            $this->emballageService->createEmballageProduit($responseFormated['emballages'], $produit);
         }
 
         return $produit;
@@ -65,11 +65,11 @@ class ProduitService
             $produit->addEmballage($emballage);
         }
 
-        if(!empty($label)) {
+        if (!empty($label)) {
             $produit->addLabel($label);
         }
 
-        if(!empty($marque)) {
+        if (!empty($marque)) {
             $produit->addMarque($marque);
         }
 

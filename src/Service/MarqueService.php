@@ -14,7 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class MarqueService
 {
-    public function __construct(ObjectManager $em) // Voir pour refactor
+    public function __construct(ObjectManager $em)
     {
         $this->em = $em;
     }
@@ -29,8 +29,8 @@ class MarqueService
 
     public function createMarqueProduit($marques, Produit $produit)
     {
-        foreach($marques as $marquesNom) {
-            if(!empty($marquesNom)) {
+        foreach ($marques as $marquesNom) {
+            if (!empty($marquesNom)) {
                 $marque = $this->existMarqueDatabase($marquesNom);
                 $produit->addMarque($marque);
             }
@@ -42,8 +42,9 @@ class MarqueService
     public function existMarqueDatabase($nom)
     {
         $marqueDb = $this->em->getRepository(Marque::class)->findOneBy(array('nom' => $nom));
-        if(!empty($marqueDb))
+        if (!empty($marqueDb)) {
             return $marqueDb;
+        }
 
         return $this->createMarque($nom);
     }

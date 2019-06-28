@@ -28,7 +28,7 @@ class UtilsService
     public static function formatNom($nom)
     {
         $nom = mb_strtolower(trim($nom));
-        if(strpos($nom, ':') !== false) {
+        if (strpos($nom, ':') !== false) {
             $nom = explode(':', $nom);
             return $nom[1];
         }

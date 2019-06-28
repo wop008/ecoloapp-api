@@ -14,7 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class EmballageService
 {
-    public function __construct(ObjectManager $em) // Voir pour refactor
+    public function __construct(ObjectManager $em)
     {
         $this->em = $em;
     }
@@ -29,8 +29,8 @@ class EmballageService
 
     public function createEmballageProduit($emballages, Produit $produit)
     {
-        foreach($emballages as $emballageNom) {
-            if(!empty($emballageNom)) {
+        foreach ($emballages as $emballageNom) {
+            if (!empty($emballageNom)) {
                 $emballage = $this->existEmballageDatabase($emballageNom);
                 $produit->addEmballage($emballage);
             }
@@ -42,8 +42,9 @@ class EmballageService
     public function existEmballageDatabase($nom)
     {
         $emballageDb = $this->em->getRepository(Emballage::class)->findOneBy(array('nom' => $nom));
-        if(!empty($emballageDb))
+        if (!empty($emballageDb)) {
             return $emballageDb;
+        }
 
         return $this->createEmballage($nom);
     }
